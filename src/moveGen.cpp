@@ -10,6 +10,16 @@ bool onBoard(int square) {
     return (square >= 0 && square < 64); 
 }
 
+enum PieceType {
+    EMPTY  = 0,
+    KING   = 1,
+    QUEEN  = 2,
+    BISHOP = 3,
+    KNIGHT = 4,
+    ROOK   = 5,
+    PAWN   = 6
+};
+
 int knightMoves[8] = { -17, -15, -10, -6, 6, 10, 15, 17 };
 int rookMoves[4] = { 8, -8, 1, -1 };
 int bishopMoves[4] = { -9, -7, 7, 9 };
@@ -54,8 +64,7 @@ std::vector<Move> generateMoves(int board[64]) {
             int piece = abs(board[square]);
             int color = board[square] > 0 ? 1 : -1;
 
-            // Pawn
-            if (piece == 6) {
+            if (piece == PAWN) {
                 int startRank = color > 0 ? 1 : 6;
 
                 // Standard Move
@@ -78,15 +87,13 @@ std::vector<Move> generateMoves(int board[64]) {
                 if (onBoard(targetSquare) && board[targetSquare] * color < 0) {
                     moves.push_back({ square, targetSquare });
                 }
-            }
+            } else
 
-            // Rook
-            if (piece == 5) {
+            if (piece == ROOK) {
                 addSlidingMoves(board, square, color, rookMoves, 4, moves);
-            }
+            } else
 
-            // Knight
-            if (piece == 4) {
+            if (piece == KNIGHT) {
                 for (int i = 0; i < 8; i++) {
                     int targetSquare = square + knightMoves[i];
                     if (!onBoard(targetSquare)) continue;
@@ -101,21 +108,18 @@ std::vector<Move> generateMoves(int board[64]) {
                         }
                     }
                 }
-            }
+            } else
 
-            // Bishop
-            if (piece == 3) {
+            if (piece == BISHOP) {
                 addSlidingMoves(board, square, color, bishopMoves, 4, moves);
-            }
-
-            // Queen
-            if (piece == 2) {
+            } else 
+            
+            if (piece == QUEEN) {
                 addSlidingMoves(board, square, color, rookMoves, 4, moves);
                 addSlidingMoves(board, square, color, bishopMoves, 4, moves);
-            }
-
-            // King
-            if (piece == 1) {
+            } else 
+            
+            if (piece == KING) {
                 for (int i = 0; i < 8; i++) {
                     int targetSquare = square + kingMoves[i];
                     if (noLoopAround(square, targetSquare) && onBoard(targetSquare) && (board[targetSquare] * color <= 0)) {
