@@ -2,10 +2,10 @@
 #include <raymath.h>
 #include "playerControls.h"
 #include "moveGen.h"
+#include <algorithm>
 
 extern bool isPieceAt(int board[64], int index);
-
-int validMoves[64];
+extern Vector2 squareCenter(int square, int startX, int squareSize, int windowHeight, bool isWhiteAtBottom);
 
 void HandlePlayerControls(int board[64], int &selectedSquare, bool isWhiteAtBottom, int startX, int squareSize, int windowHeight) {
     int squareFile = Clamp((GetMouseX() - startX) / squareSize, 0, 7);
@@ -20,12 +20,16 @@ void HandlePlayerControls(int board[64], int &selectedSquare, bool isWhiteAtBott
         if (selectedSquare == -1) {
             if (isPieceAt(board, squareIndex)) {
                 selectedSquare = squareIndex;
-                generateValidMoves(selectedSquare, board, validMoves);
             }
         }
     } else {
         if (selectedSquare != -1) {
-            if (validMoves[squareIndex] == 1) { // If the move is valid
+            std::vector<Move> validMoves = generateMoves(board);
+            auto it = std::find_if(validMoves.begin(), validMoves.end(),
+                [selectedSquare, squareIndex](const Move& m) {
+                    return m.startingSquare == selectedSquare && m.targetSquare == squareIndex;
+                });
+            if (it != validMoves.end()) {
                 board[squareIndex] = board[selectedSquare];
                 board[selectedSquare] = 0;
             }
@@ -34,22 +38,16 @@ void HandlePlayerControls(int board[64], int &selectedSquare, bool isWhiteAtBott
         }
     }
 
-    // Draw the valid moves
-    for (int file = 0; file < 8; file++) {
-        for (int rank = 0; rank < 8; rank++) {
-            int squareIndex = rank * 8 + file;
+    std::vector<Move> validMoves = generateMoves(board);
+    for (const Move& move : validMoves) {
+                Vector2 start = squareCenter(move.startingSquare, startX, squareSize, windowHeight, isWhiteAtBottom);
+                Vector2 end = squareCenter(move.targetSquare, startX, squareSize, windowHeight, isWhiteAtBottom);
 
-            // Calculate variables for displaying board
-            int displayFile = isWhiteAtBottom ? file : 7 - file;
-            int displayRank = isWhiteAtBottom ? rank : 7 - rank;
-            int x = startX + displayFile * squareSize;
-            int y = windowHeight - (displayRank + 1) * squareSize;
+                // Draw the shaft
+                DrawLineEx(start, end, 4, RED);
 
-            // Draw the squares
-            if (validMoves[squareIndex] != 0) {
-                DrawRectangle(x, y, squareSize, squareSize, Fade(GREEN, 0.5f));
+                // Draw the arrowhead
+                Vector2 dir = Vector2Normalize(Vector2Subtract(end, start));
+                DrawCircleV(end, 7, RED);
             }
-            
-        }
-    }
 }

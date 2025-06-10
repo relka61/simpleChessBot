@@ -1,6 +1,12 @@
 #ifndef MOVEGEN_H
 #define MOVEGEN_H
+#include <vector>
 
-void generateValidMoves(int selectedSquare, int board[64], int moves[64]);
+struct Move {
+    int startingSquare;
+    int targetSquare;
+};
+
+std::vector<Move> generateMoves(int board[64]);
 
 #endif // MOVEGEN_H
