@@ -1,12 +1,8 @@
-#ifndef MOVEGEN_H
-#define MOVEGEN_H
+#pragma once
+
+#include <vector>
+#include "utilities.h"
 #include <vector>
 
-struct Move {
-    int startingSquare;
-    int targetSquare;
-};
-
-std::vector<Move> generateMoves(int board[64]);
-
-#endif // MOVEGEN_H
+std::vector<Move> generateMoves(gameState state);
+void makeMove(gameState& state, std::vector<Move>& validMoves, const Move& move);

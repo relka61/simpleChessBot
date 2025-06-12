@@ -1,48 +1,22 @@
 #include <Raylib.h>
+#include "utilities.h"
 #include <vector>
-
-struct Move {
-    int startingSquare;
-    int targetSquare;
-};
-
-bool onBoard(int square) { 
-    return (square >= 0 && square < 64); 
-}
-
-enum PieceType {
-    EMPTY  = 0,
-    KING   = 1,
-    QUEEN  = 2,
-    BISHOP = 3,
-    KNIGHT = 4,
-    ROOK   = 5,
-    PAWN   = 6
-};
 
 int knightMoves[8] = { -17, -15, -10, -6, 6, 10, 15, 17 };
 int rookMoves[4] = { 8, -8, 1, -1 };
 int bishopMoves[4] = { -9, -7, 7, 9 };
 int kingMoves[8] = { -9, -8, -7, -1, 1, 7, 8, 9 };
 
-bool noLoopAround(int square, int targetSquare) {
-    return (abs(square % 8 - targetSquare % 8) <= 1);
-}
-
 // Helper for sliding pieces (rook, bishop, queen)
-void addSlidingMoves(int board[64], int square, int color, const int* colors, int dirCount, std::vector<Move>& moves) {
-    for (int i = 0; i < dirCount; i++) {
-        int offset = colors[i];
+void addSlidingMoves(int board[64], int square, int color, const int* moveOffsets, std::vector<Move>& moves) {
+    for (int i = 0; i < 4; i++) {
+        int offset = moveOffsets[i];
         int targetSquare = square;
         for (int step = 1; step < 8; step++) {
             int fileFrom = targetSquare % 8;
+            if (!noLoopAround(targetSquare, targetSquare + offset)) break;
             targetSquare += offset;
             if (!onBoard(targetSquare)) break;
-            int fileTo = targetSquare % 8;
-
-            // For horizontal and diagonal moves, prevent wrapping
-            if ((offset == 1 || offset == -1) && abs(fileFrom - fileTo) != 1) break;
-            if ((offset == 9 || offset == -9 || offset == 7 || offset == -7) && abs(fileFrom - fileTo) != 1) break;
 
             if (board[targetSquare] == 0) {
                 moves.push_back({ square, targetSquare });
@@ -50,19 +24,21 @@ void addSlidingMoves(int board[64], int square, int color, const int* colors, in
                 if (color * board[targetSquare] < 0) {
                     moves.push_back({ square, targetSquare });
                 }
-                break; // Blocked by any piece
+                break;
             }
         }
     }
 }
 
-std::vector<Move> generateMoves(int board[64]) {
+std::vector<Move> generateMoves(gameState state) {
     std::vector<Move> moves;
+    int* board = state.board;
+    int color = state.isWhiteTurn ? 1 : -1;
+
 
     for (int square = 0; square < 64; square++) {
         if (board[square] != 0) {
-            int piece = abs(board[square]);
-            int color = board[square] > 0 ? 1 : -1;
+            int piece = color * board[square];
 
             if (piece == PAWN) {
                 int startRank = color > 0 ? 1 : 6;
@@ -90,19 +66,13 @@ std::vector<Move> generateMoves(int board[64]) {
             } else
 
             if (piece == ROOK) {
-                addSlidingMoves(board, square, color, rookMoves, 4, moves);
+                addSlidingMoves(board, square, color, rookMoves, moves);
             } else
 
             if (piece == KNIGHT) {
                 for (int i = 0; i < 8; i++) {
                     int targetSquare = square + knightMoves[i];
-                    if (!onBoard(targetSquare)) continue;
-
-                    int fileFrom = square % 8;
-                    int fileTo = targetSquare % 8;
-                    int df = abs(fileFrom - fileTo);
-
-                    if (df == 1 || df == 2) {
+                    if (noLoopAround(square, targetSquare, 2) && onBoard(targetSquare)) {
                         if (color * board[targetSquare] <= 0) {
                             moves.push_back({ square, targetSquare });
                         }
@@ -111,12 +81,12 @@ std::vector<Move> generateMoves(int board[64]) {
             } else
 
             if (piece == BISHOP) {
-                addSlidingMoves(board, square, color, bishopMoves, 4, moves);
+                addSlidingMoves(board, square, color, bishopMoves, moves);
             } else 
             
             if (piece == QUEEN) {
-                addSlidingMoves(board, square, color, rookMoves, 4, moves);
-                addSlidingMoves(board, square, color, bishopMoves, 4, moves);
+                addSlidingMoves(board, square, color, rookMoves, moves);
+                addSlidingMoves(board, square, color, bishopMoves, moves);
             } else 
             
             if (piece == KING) {
@@ -131,4 +101,31 @@ std::vector<Move> generateMoves(int board[64]) {
     }
 
     return moves;
+}
+
+
+void makeMove(gameState& state, std::vector<Move>& validMoves, const Move& move) {
+    int piece = state.board[move.startingSquare];
+    int color = piece > 0 ? 1 : -1;
+    int promotionPiece = QUEEN;
+
+    if (piece == PAWN) {
+        // Promotion
+        if (color == 1 && move.targetSquare / 8 == 7) {
+            piece = promotionPiece;
+        } else if (color == -1 && move.targetSquare / 8 == 0) {
+            piece = -promotionPiece;
+        }
+
+        // En passant capture
+
+    }
+
+    // Castling
+
+    // General Move
+    state.board[move.targetSquare] = piece;
+    state.board[move.startingSquare] = 0;
+    state.isWhiteTurn = !state.isWhiteTurn;
+    validMoves = generateMoves(state);
 }

@@ -1,9 +1,6 @@
-#ifndef RENDER_H
-#define RENDER_H
+#pragma once
 
 #include "raylib.h"
+#include "utilities.h"
 
-// Declare rendering function
-void RenderBoard(Texture2D spritesheet, int startX, int squareSize, int windowHeight, bool isWhiteAtBottom, int selectedSquare);
-
-#endif // RENDER_HTexture2D
+void RenderBoard(gameState state, Texture2D spritesheet, bool isWhiteAtBottom, int selectedSquare);

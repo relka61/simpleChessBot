@@ -1,62 +1,41 @@
 #include "raylib.h"
-#include <raymath.h>
 #include "render.h"
 #include "playerControls.h"
 #include "moveGen.h"
-
-int board[64] = {
-     5, 4, 3, 2, 1, 3, 4, 5,
-     6, 6, 6, 6, 6, 6, 6, 6,
-     0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0,
-    -6,-6,-6,-6,-6,-6,-6,-6,
-    -5,-4,-3,-1,-2,-3,-4,-5
-};
-
-struct gameState {
-    int board[64];
-    bool isWhiteTurn;
-    float timeLeft[2];
-    int movesWithoutCapture;
-    bool canCastle[4]; // 0: white kingside, 1: white queenside, 2: black kingside, 3: black queenside
-};
-
-Color lightColor = { 210, 180, 150, 255 };
-Color darkColor = { 140, 100, 80, 255 };
-Color highlightColor = { 40, 140, 255, 255 };
-
-bool isPieceAt(int board[64], int index) {
-    return board[index] != 0;
-}
-
-Vector2 squareCenter(int square, int startX, int squareSize, int windowHeight, bool isWhiteAtBottom) {
-    int file = square % 8;
-    int rank = square / 8;
-    int displayFile = isWhiteAtBottom ? file : 7 - file;
-    int displayRank = isWhiteAtBottom ? rank : 7 - rank;
-    float x = startX + displayFile * squareSize + squareSize / 2.0f;
-    float y = windowHeight - (displayRank + 1) * squareSize + squareSize / 2.0f;
-    return { x, y };
-}
-
+#include "utilities.h"
 
 int main(void) {
+    // Initialization
     InitWindow(1280, 720, "i luv chess");
-    int windowWidth = GetScreenWidth();
-    int windowHeight = GetScreenHeight();
     SetTargetFPS(60);
 
+    // Rendering variables
     bool isWhiteAtBottom = true;
-    int selectedSquare = -1;
-
-    int startX = (windowWidth - windowHeight) / 2;
-    int squareSize = windowHeight / 8;
-
     Texture2D spritesheet = LoadTexture("resources/spritesheet.png");
 
-    std::vector<Move> moves = generateMoves(board);
+    // Player control variables
+    int selectedSquare = -1;
+
+    // Game state initialization
+    gameState state = {
+        {
+            5, 4, 3, 2, 1, 3, 4, 5,
+            6, 6, 6, 6, 6, 6, 6, 6,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+           -6,-6,-6,-6,-6,-6,-6,-6,
+           -5,-4,-3,-2,-1,-3,-4,-5
+        },
+        true,           // isWhiteTurn
+        {300.0f, 240.0f}, // timeLeft
+        0,              // movesWithoutCapture
+        {true, true, true, true} // canCastle
+    };
+
+    // Create variable to store moves
+    std::vector<Move> validMoves = generateMoves(state);
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -65,14 +44,18 @@ int main(void) {
             isWhiteAtBottom = !isWhiteAtBottom;
         }
 
+        // Handle player controls
+        handlePlayerControls(state, validMoves, selectedSquare, isWhiteAtBottom);
+
         // Draw
         BeginDrawing();
             ClearBackground(BLACK);
-            RenderBoard(spritesheet, startX, squareSize, windowHeight, isWhiteAtBottom, selectedSquare);
-            HandlePlayerControls(board, selectedSquare, isWhiteAtBottom, startX, squareSize, windowHeight);
+            RenderBoard(state, spritesheet, isWhiteAtBottom, selectedSquare);
+            
         EndDrawing();
     }
 
+    // Cleanup and close
     UnloadTexture(spritesheet);
     CloseWindow();
     return 0;
