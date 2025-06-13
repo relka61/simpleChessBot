@@ -11,16 +11,17 @@ struct gameState {
 struct Move {
     int startingSquare;
     int targetSquare;
+    int promotionPiece = 0;
 };
 
 enum PieceType {
-    EMPTY  = 0,
     KING   = 1,
     QUEEN  = 2,
     BISHOP = 3,
     KNIGHT = 4,
     ROOK   = 5,
-    PAWN   = 6
+    PAWN   = 6,
+    PAWN_ENPASSANT = 7
 };
 
 Vector2 squareCenter(int square, int startX, int squareSize, int windowHeight, bool isWhiteAtBottom);

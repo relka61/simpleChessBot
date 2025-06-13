@@ -42,16 +42,13 @@ int main(void) {
         // Toggle board orientation
         if (IsKeyPressed(KEY_S)) {
             isWhiteAtBottom = !isWhiteAtBottom;
-        }
-
-        // Handle player controls
-        handlePlayerControls(state, validMoves, selectedSquare, isWhiteAtBottom);
+        }        
 
         // Draw
         BeginDrawing();
             ClearBackground(BLACK);
             RenderBoard(state, spritesheet, isWhiteAtBottom, selectedSquare);
-            
+            handlePlayerControls(state, validMoves, selectedSquare, isWhiteAtBottom);
         EndDrawing();
     }
 

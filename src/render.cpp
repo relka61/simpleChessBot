@@ -1,3 +1,5 @@
+#include "raylib.h"
+#include "raymath.h"
 #include "render.h"
 #include "utilities.h"
 #include "moveGen.h"
@@ -8,6 +10,12 @@ Color highlightColor = { 10, 100, 200, 255 };
 Color possibleMoveColor = { 10, 100, 200, 127 };
 
 Vector2 origin = { 0.0f, 0.0f };
+
+int displayPiece(int piece) {
+    if (piece == PAWN_ENPASSANT) return PAWN;
+    if (piece == -PAWN_ENPASSANT) return -PAWN;
+    return piece;
+}
 
 void RenderBoard(gameState state, Texture2D spritesheet, bool isWhiteAtBottom, int selectedSquare) {
     int windowWidth = GetScreenWidth();
@@ -53,9 +61,10 @@ void RenderBoard(gameState state, Texture2D spritesheet, bool isWhiteAtBottom, i
             DrawRectangle(x, y, squareSize, squareSize, (displayFile + displayRank) % 2 == 0 ? darkColor : lightColor);
 
             // Draw the pieces
-            if (selectedSquare != squareIndex && board[squareIndex] != 0) {
-                int xPos = 171 * (board[squareIndex] > 0 ? board[squareIndex] - 1 : -board[squareIndex] - 1);
-                int yPos = board[squareIndex] > 0 ? 0 : 171;
+            int piece = displayPiece(board[squareIndex]);
+            if (selectedSquare != squareIndex && piece != 0) {
+                int xPos = 171 * (piece > 0 ? piece - 1 : -piece - 1);
+                int yPos = piece > 0 ? 0 : 171;
                 Rectangle pieceRect = { xPos, yPos, 171, 171 };
                 DrawTexturePro(spritesheet, pieceRect, destRect, origin, 0, WHITE);
             }
@@ -85,8 +94,9 @@ void RenderBoard(gameState state, Texture2D spritesheet, bool isWhiteAtBottom, i
             }
 
         // Draw the piece at the mouse position
-        int xPos = 171 * (board[selectedSquare] > 0 ? board[selectedSquare] - 1 : -board[selectedSquare] - 1);
-        int yPos = board[selectedSquare] > 0 ? 0 : 171;
+        int piece = displayPiece(state.board[selectedSquare]);
+        int xPos = 171 * (piece > 0 ? piece - 1 : -piece - 1);
+        int yPos = piece > 0 ? 0 : 171;
         Rectangle pieceRect = { xPos, yPos, 171, 171 };
         Rectangle destRect = { GetMouseX() - squareSize / 2, GetMouseY() - squareSize / 2, (float)squareSize, (float)squareSize };
         DrawTexturePro(spritesheet, pieceRect, destRect, origin, 0, WHITE);
